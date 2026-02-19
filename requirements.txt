@@ -1,3 +1,4 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
 flask
 gunicorn
 numpy
@@ -8,4 +9,5 @@ apscheduler
 joblib
 scikit-learn
 matplotlib
+torch
 finnhub-python
