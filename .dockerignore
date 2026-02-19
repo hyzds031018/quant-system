@@ -1,0 +1,14 @@
+.git
+.idea
+__pycache__
+models/
+stock_data/
+*.pth
+*.pt
+*.pkl
+*.joblib
+*.db
+*.cache
+_pushrepo/
+_script_tmp.js
+acl_report*.txt
