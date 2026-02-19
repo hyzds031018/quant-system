@@ -1,0 +1,1965 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockPulse AI — 智能股票分析平台</title>
+    <meta name="description" content="基于AI的股票分析平台，提供深度学习预测、技术指标和风险评估。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/static/js/echarts.min.js"></script>
+    <script src="/static/js/jquery.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0f111a;
+            --bg-secondary: #1a1f2e;
+            --bg-card: rgba(30, 34, 45, 0.7);
+            --bg-card-hover: rgba(40, 44, 55, 0.9);
+            --border: rgba(113, 113, 122, 0.2);
+            --border-glow: rgba(99, 102, 241, 0.5);
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.5);
+            --accent-light: #818cf8;
+            --green: #10b981;
+            --red: #ef4444;
+            --sidebar-w: 260px;
+            --header-h: 64px;
+            --radius: 12px;
+            --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-w);
+            height: 100vh;
+            background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-logo {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-logo .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            font-weight: 700;
+        }
+
+        .sidebar-logo h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .sidebar-logo span {
+            font-size: 0.7rem;
+            color: var(--accent-light);
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .sidebar-section {
+            padding: 16px;
+        }
+
+        .sidebar-section label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .sidebar-section select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            background-size: 16px;
+        }
+
+        .sidebar-section select:hover {
+            background-color: rgba(255, 255, 255, 0.08);
+            border-color: var(--accent);
+        }
+
+        .sidebar-section select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar-section select option {
+            background: #1e293b;
+            color: white;
+            padding: 10px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 8px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+        }
+
+        .nav-item:hover {
+            background: rgba(99, 102, 241, 0.08);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: var(--accent-light);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Main */
+        .main {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+        }
+
+        .top-bar {
+            height: var(--header-h);
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .top-bar-left h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 18px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.4), 0 2px 4px -1px rgba(99, 102, 241, 0.2);
+            position: relative;
+            overflow: hidden;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.5), 0 4px 6px -2px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn-primary:hover::after {
+            left: 100%;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--accent);
+            color: var(--text-primary);
+        }
+
+        /* Content */
+        .content {
+            padding: 24px 32px;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .overview-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .overview-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .overview-card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .overview-card:hover::before {
+            opacity: 1;
+        }
+
+        .overview-card .ov-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .overview-card .ov-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .overview-card .ov-sub {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(20px);
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        .card:hover {
+            border-color: var(--border-glow);
+        }
+
+        .card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-header .ch-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header .ch-left i {
+            color: var(--accent-light);
+            font-size: 1rem;
+        }
+
+        .card-header h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Grid layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Chart wrapper */
+        .chart-wrapper {
+            width: 100%;
+            height: 650px;
+        }
+
+        .chart-sm {
+            height: 260px;
+        }
+
+        /* Stat items */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .stat-box:hover {
+            background: rgba(99, 102, 241, 0.06);
+            border-color: var(--border-glow);
+        }
+
+        .stat-box .sv {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-box .sl {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-green {
+            background: var(--green-dim);
+            color: var(--green);
+        }
+
+        .badge-red {
+            background: var(--red-dim);
+            color: var(--red);
+        }
+
+        .badge-neutral {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-secondary);
+        }
+
+        .badge-blue {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--blue);
+        }
+
+        .badge-gold {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--gold);
+        }
+
+        /* Prediction table */
+        .pred-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .pred-table th {
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .pred-table td {
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .pred-table tr:hover td {
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        /* Opportunities */
+        .op-title {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .op-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .op-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .op-symbol {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+        .op-metrics {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin-top: 2px;
+        }
+        .op-price {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent-light);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .op-meta {
+            margin-top: 12px;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* Info grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .info-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+        }
+
+        .info-item .il {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+
+        .info-item .iv {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .info-span2 {
+            grid-column: span 2;
+        }
+
+        /* Loading */
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            height: 240px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: var(--radius);
+        }
+
+        .loading-state i {
+            font-size: 2rem;
+            color: var(--accent);
+            animation: spin 1s linear infinite;
+        }
+
+        .empty-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-muted);
+            opacity: 0.6;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .empty-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+        }
+
+        .empty-placeholder p {
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-sm {
+            height: 140px;
+        }
+
+        .loading-sm i {
+            font-size: 1.5rem;
+        }
+
+        /* Tech indicators tabs */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tab-btn.active {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--accent-light);
+            border-color: var(--border-glow);
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .overview-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .grid-2,
+            .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .overview-grid {
+
+                /* Scrollbar */
+                ::-webkit-scrollbar {
+                    width: 6px;
+                }
+
+                ::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                ::-webkit-scrollbar-thumb {
+                    background: rgba(99, 102, 241, 0.3);
+                    border-radius: 3px;
+                }
+
+                ::-webkit-scrollbar-thumb:hover {
+                    background: rgba(99, 102, 241, 0.5);
+                }
+
+                /* Quant Styles */
+                .quant-tab {
+                    animation: fadeIn 0.3s;
+                }
+
+                .strategy-controls {
+                    display: flex;
+                    gap: 16px;
+                    align-items: center;
+                    margin-bottom: 20px;
+                    background: rgba(255, 255, 255, 0.02);
+                    padding: 16px;
+                    border-radius: 12px;
+                    border: 1px solid var(--border);
+                    flex-wrap: wrap;
+                }
+
+                .strategy-controls label {
+                    font-size: 0.85rem;
+                    color: var(--text-secondary);
+                }
+
+                .strategy-controls input {
+                    background: rgba(0, 0, 0, 0.2);
+                    border: 1px solid var(--border);
+                    color: var(--text-primary);
+                    padding: 10px 14px;
+                    border-radius: 8px;
+                    width: 100px;
+                    font-family: 'JetBrains Mono', monospace;
+                    transition: var(--transition);
+                }
+
+                .strategy-controls input:focus {
+                    border-color: var(--accent);
+                    box-shadow: 0 0 0 2px var(--accent-glow);
+                    outline: none;
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+
+                    to {
+                        opacity: 1;
+                    }
+                }
+
+                /* News Styles */
+                .news-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    gap: 16px;
+                    min-height: 200px;
+                }
+
+                .news-item {
+                    background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+                    border: 1px solid rgba(255, 255, 255, 0.06);
+                    border-radius: 16px;
+                    padding: 24px;
+                    transition: var(--transition);
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                }
+
+                .news-item:hover {
+                    transform: translateY(-4px);
+                    border-color: var(--accent-glow);
+                    box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.5);
+                    background: rgba(255, 255, 255, 0.05);
+                }
+
+                .news-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    font-size: 0.75rem;
+                    color: var(--text-muted);
+                    margin-bottom: 4px;
+                }
+
+                .news-source {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-weight: 600;
+                    color: var(--accent-light);
+                    letter-spacing: 0.5px;
+                }
+
+                .news-headline {
+                    font-size: 1.05rem;
+                    font-weight: 700;
+                    color: #fff;
+                    line-height: 1.5;
+                    text-decoration: none;
+                    transition: color 0.2s;
+                    display: block;
+                }
+
+                .news-headline:hover {
+                    color: var(--accent);
+                }
+
+                .news-summary {
+                    font-size: 0.9rem;
+                    color: #94a3b8;
+                    line-height: 1.6;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    margin-bottom: 8px;
+                }
+
+                .news-footer {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    margin-top: auto;
+                    padding-top: 16px;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                }
+
+                .read-more {
+                    font-size: 0.8rem;
+                    color: var(--text-secondary);
+                    text-decoration: none;
+                    transition: var(--transition);
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                }
+
+                .read-more:hover {
+                    color: var(--accent-light);
+                    gap: 8px;
+                }
+
+                /* Strategy Inputs */
+                .strategy-controls input {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    color: #fff;
+                    padding: 8px 12px;
+                    border-radius: 8px;
+                    outline: none;
+                    transition: all 0.3s;
+                    font-family: inherit;
+                }
+
+                .strategy-controls input:focus {
+                    border-color: var(--accent);
+                    background: rgba(255, 255, 255, 0.1);
+                    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+                }
+
+                .trade-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 10px;
+                    font-size: 0.85rem;
+                }
+
+                .trade-table th {
+                    text-align: left;
+                    padding: 8px;
+                    color: var(--text-muted);
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                }
+
+                .trade-table td {
+                    padding: 8px;
+                    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                    color: #e2e8f0;
+                }
+
+                .trade-table tr:last-child td {
+                    border-bottom: none;
+                }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon"><i class="fas fa-bolt"></i></div>
+            <div>
+                <h1>StockPulse</h1><span>智能分析</span>
+            </div>
+        </div>
+        <div class="sidebar-section">
+            <label><i class="fas fa-search"></i> 选择股票</label>
+            <select id="stockSelect">
+                <option value="">选择股票代码...</option>
+            </select>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" onclick="scrollToSection('overview')"><i class="fas fa-globe"></i> 市场概览</div>
+            <div class="nav-item" onclick="scrollToSection('kline')"><i class="fas fa-chart-candlestick"></i> K线与预测
+            </div>
+            <div class="nav-item" onclick="scrollToSection('tech')"><i class="fas fa-chart-area"></i> 技术指标</div>
+            <div class="nav-item" onclick="scrollToSection('prediction')"><i class="fas fa-wand-magic-sparkles"></i> AI
+                价格预测</div>
+            <div class="nav-item" onclick="scrollToSection('metrics')"><i class="fas fa-gauge-high"></i> 模型指标</div>
+            <div class="nav-item" onclick="scrollToSection('sentiment')"><i class="fas fa-heart-pulse"></i> 市场情绪</div>
+            <div class="nav-item" onclick="scrollToSection('opportunities')"><i class="fas fa-bolt"></i> 交易机会</div>
+            <div class="nav-item" onclick="scrollToSection('risk')"><i class="fas fa-shield-halved"></i> 风险评估</div>
+            <div class="nav-item" onclick="scrollToSection('quant')"><i class="fas fa-chess-knight"></i> 量化策略</div>
+            <div class="nav-item" onclick="scrollToSection('stockinfo')"><i class="fas fa-building"></i> 公司信息</div>
+        </nav>
+        <div class="sidebar-footer">© 2026 StockPulse AI<br>基于深度学习驱动</div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <button class="btn btn-ghost" id="menuToggle" style="display:none;"
+                    onclick="document.getElementById('sidebar').classList.toggle('open')"><i
+                        class="fas fa-bars"></i></button>
+                <h2 id="pageTitle">仪表盘</h2>
+                <span class="badge badge-blue" id="currentStockBadge" style="display:none;"></span>
+            </div>
+            <div class="top-bar-right">
+                <span style="font-size:0.78rem;color:var(--text-muted);" id="lastUpdate"></span>
+                <button class="btn btn-primary" onclick="refreshData()"><i class="fas fa-rotate"></i> 刷新数据</button>
+            </div>
+        </header>
+
+        <div class="content">
+            <!-- Market Overview -->
+            <section id="overview">
+                <div class="overview-grid" id="marketOverviewSection">
+                    <div class="overview-card">
+                        <div class="loading-state"><i class="fas fa-spinner"></i> 正在加载市场数据...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- K-Line Chart -->
+            <section id="kline">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="ch-left"><i class="fas fa-chart-line"></i>
+                            <h3>K线图与 AI 预测</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-wrapper" id="kLineChartArea">
+                            <div class="loading-state"><i class="fas fa-spinner"></i> 请选择股票以开始分析...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technical Indicators -->
+            <section id="tech">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="ch-left"><i class="fas fa-chart-area"></i>
+                            <h3>技术指标</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="grid-2">
+                            <div class="chart-sm" id="priceChart">
+                                <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>
+                            </div>
+                            <div class="chart-sm" id="rsiChart">
+                                <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> Loading...</div>
+                            </div>
+                            <div class="chart-sm" id="atrChart">
+                                <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> Loading...</div>
+                            </div>
+                            <div class="chart-sm" id="stochChart">
+                                <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Prediction -->
+            <section id="prediction">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="ch-left"><i class="fas fa-wand-magic-sparkles"></i>
+                            <h3>未来 7 天 AI 价格预测</h3>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="predictionChart" style="height:300px;margin-bottom:16px;"></div>
+                        <div id="predictionTable"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid-2">
+                <!-- Model Metrics -->
+                <section id="metrics">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="ch-left"><i class="fas fa-gauge-high"></i>
+                                <h3>模型指标</h3>
+                            </div>
+                        </div>
+                        <div class="card-body" id="modelMetricsContent">
+                            <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> Loading...</div>
+                        </div>
+                        <div class="card-body" id="modelInfoContent" style="border-top:1px solid var(--border);">
+                            <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> Loading...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sentiment -->
+                <section id="sentiment">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="ch-left"><i class="fas fa-heart-pulse"></i>
+                                <h3>市场情绪</h3>
+                            </div>
+                        </div>
+                        <div class="card-body" id="sentimentContent">
+                            <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 正在分析...</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Opportunities -->
+            <section id="opportunities" class="full-width">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="ch-left"><i class="fas fa-bolt"></i>
+                            <h3>交易机会（波动率 + 动量）</h3>
+                        </div>
+                        <div class="top-bar-right">
+                            <button class="btn btn-ghost" onclick="loadOpportunities()"><i class="fas fa-rotate"></i>
+                                刷新</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="strategy-controls">
+                            <label>股票池 (逗号分隔):</label>
+                            <input type="text" id="opPool" placeholder="AAPL,MSFT" style="width:240px;">
+                            <label>行业过滤:</label>
+                            <input type="text" id="opIndustry" placeholder="Technology" style="width:200px;">
+                            <label>动量阈值(%):</label>
+                            <input type="number" id="opMomentumMin" value="1" step="0.1" style="width:90px;">
+                            <button class="btn btn-primary" onclick="loadOpportunities()"><i class="fas fa-filter"></i>
+                                应用</button>
+                        </div>
+                        <div class="grid-2">
+                            <div>
+                                <div class="op-title">高波动（长跨式）</div>
+                                <div id="opLong" class="op-list">
+                                    <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 扫描中...</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="op-title">低波动（短跨式）</div>
+                                <div id="opShort" class="op-list">
+                                    <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 扫描中...</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="opMeta" class="op-meta"></div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid-2">
+                <!-- Risk -->
+                <section id="risk">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="ch-left"><i class="fas fa-shield-halved"></i>
+                                <h3>风险评估</h3>
+                            </div>
+                        </div>
+                        <div class="card-body" id="riskContent">
+                            <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 正在计算...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Stock Info -->
+                <section id="stockinfo">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="ch-left"><i class="fas fa-building"></i>
+                                <h3>公司信息</h3>
+                            </div>
+                        </div>
+                        <div class="card-body" id="stockInfoContent">
+                            <div class="loading-state loading-sm"><i class="fas fa-spinner"></i> Loading...</div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Quant Strategies -->
+            <section id="quant" class="full-width">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="ch-left"><i class="fas fa-chess-knight"></i>
+                            <h3>量化策略回测</h3>
+                        </div>
+                        <div class="tab-bar">
+                            <button class="tab-btn active" onclick="switchQuantTab('ma', this)">均线交叉</button>
+                            <button class="tab-btn" onclick="switchQuantTab('macd', this)">MACD策略</button>
+                            <button class="tab-btn" onclick="switchQuantTab('rsi', this)">RSI策略</button>
+                            <button class="tab-btn" onclick="switchQuantTab('opt', this)">组合优化</button>
+                            <button class="tab-btn" onclick="switchQuantTab('vol', this)">波动率目标</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- MA Strategy -->
+                        <div id="quant-ma" class="quant-tab">
+                            <div class="strategy-controls">
+                                <label>短期窗口:</label><input type="number" id="maShort" value="20">
+                                <label>长期窗口:</label><input type="number" id="maLong" value="50">
+                                <button class="btn btn-primary" onclick="runMABacktest()"><i class="fas fa-play"></i>
+                                    运行回测</button>
+                            </div>
+                            <div id="maChart" style="height:400px;">
+                                <div class="loading-state">准备运行回测</div>
+                            </div>
+                            <div id="maMetrics" class="stats-row" style="margin-top:16px;"></div>
+                            <div id="maTrades" class="trades-log-container"></div>
+                        </div>
+
+                        <!-- Portfolio Optimization -->
+                        <div id="quant-opt" class="quant-tab" style="display:none;">
+                            <div class="strategy-controls">
+                                <label>选择股票 (逗号分隔):</label>
+                                <input type="text" id="optStocks" value="AAPL,MSFT,GOOGL,AMZN,NVDA"
+                                    style="width:350px;">
+                                <button class="btn btn-primary" onclick="runOptimization()"><i
+                                        class="fas fa-calculator"></i> 计算最优组合</button>
+                            </div>
+                            <div class="grid-2">
+                                <div id="optPie" style="height:350px;"></div>
+                                <div id="optMetrics"
+                                    style="padding:20px; display:flex; flex-direction:column; justify-content:center;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Volatility Targeting -->
+                        <div id="quant-vol" class="quant-tab" style="display:none;">
+                            <div class="strategy-controls">
+                                <label>目标波动率:</label><input type="number" id="volTarget" value="0.15" step="0.01">
+                                <button class="btn btn-primary" onclick="runVolTarget()"><i class="fas fa-bullseye"></i>
+                                    运行回测</button>
+                            </div>
+                            <div id="volChart" style="height:400px;">
+                                <div class="loading-state">Ready to run backtest</div>
+                            </div>
+                        </div>
+
+                        <!-- MACD Strategy -->
+                        <div id="quant-macd" class="quant-tab" style="display:none;">
+                            <div class="strategy-controls">
+                                <label>快线(Fast):</label><input type="number" id="macdFast" value="12"
+                                    style="width:60px;">
+                                <label>慢线(Slow):</label><input type="number" id="macdSlow" value="26"
+                                    style="width:60px;">
+                                <label>信号线(Sig):</label><input type="number" id="macdSig" value="9" style="width:60px;">
+                                <button class="btn btn-primary" onclick="runMACDBacktest()"><i class="fas fa-play"></i>
+                                    运行回测</button>
+                            </div>
+                            <div id="macdChart" style="height:400px;">
+                                <div class="loading-state">准备运行回测</div>
+                            </div>
+                            <div id="macdMetrics" class="stats-row" style="margin-top:16px;"></div>
+                            <div id="macdTrades" class="trades-log-container"></div>
+                        </div>
+
+                        <!-- RSI Strategy -->
+                        <div id="quant-rsi" class="quant-tab" style="display:none;">
+                            <div class="strategy-controls">
+                                <label>窗口(Win):</label><input type="number" id="rsiWin" value="14" style="width:60px;">
+                                <label>超买:</label><input type="number" id="rsiOverbought" value="70"
+                                    style="width:60px;">
+                                <label>超卖:</label><input type="number" id="rsiOversold" value="30" style="width:60px;">
+                                <button class="btn btn-primary" onclick="runRSIBacktest()"><i class="fas fa-play"></i>
+                                    运行回测</button>
+                            </div>
+                            <div id="rsiChart" style="height:400px;">
+                                <div class="loading-state">准备运行回测</div>
+                            </div>
+                            <div id="rsiMetrics" class="stats-row" style="margin-top:16px;"></div>
+                            <div id="rsiTrades" class="trades-log-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- News Feed -->
+            <section id="news" class="full-width">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="ch-left"><i class="fas fa-newspaper"></i>
+                            <h3>最新新闻</h3>
+                        </div>
+                        <div class="top-bar-right">
+                            <div class="tab-bar">
+                                <button class="tab-btn active" onclick="loadNews(currentStock)">个股新闻</button>
+                                <button class="tab-btn" onclick="loadMarketNews()">市场新闻</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="newsFeed" class="news-grid">
+                            <div class="loading-state">请选择股票查看新闻...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        let currentStock = '';
+        let charts = {};
+        const DARK_THEME = { bg: 'transparent', textColor: '#94a3b8', splitLineColor: 'rgba(99,102,241,0.08)', axisLineColor: 'rgba(99,102,241,0.15)' };
+
+        function scrollToSection(id) {
+            document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        $(document).ready(function () {
+            loadStockList();
+            loadMarketOverview();
+            setInterval(loadMarketOverview, 5 * 60 * 1000);
+            const mq = window.matchMedia('(max-width:768px)');
+            if (mq.matches) document.getElementById('menuToggle').style.display = 'flex';
+            mq.addEventListener('change', e => { document.getElementById('menuToggle').style.display = e.matches ? 'flex' : 'none'; });
+        });
+
+        function loadStockList() {
+            $.ajax({
+                url: '/api/stocks', method: 'GET',
+                success: function (data) {
+                    const s = $('#stockSelect');
+                    s.empty().append('<option value="">选择股票代码...</option>');
+                    data.forEach(stock => s.append(`<option value="${stock}">${stock}</option>`));
+                    s.on('change', function () {
+                        const v = $(this).val();
+                        if (v) {
+                            currentStock = v; clearAll(); loadAllData(v);
+                            $('#currentStockBadge').text(v).show();
+                            $('#pageTitle').text(v + ' 分析');
+                        } else { currentStock = ''; clearAll(); $('#currentStockBadge').hide(); $('#pageTitle').text('仪表盘'); }
+                    });
+                }
+            });
+        }
+
+        function clearAll() {
+            Object.keys(charts).forEach(k => { if (charts[k]) { charts[k].dispose(); charts[k] = null; } });
+            charts = {};
+            $('#kLineChartArea').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在加载K线数据...</div>');
+            ['priceChart', 'rsiChart', 'atrChart', 'stochChart'].forEach(id =>
+                document.getElementById(id).innerHTML = '<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>');
+            $('#predictionChart').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>');
+            $('#predictionTable').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>');
+            $('#modelMetricsContent').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>');
+            $('#modelInfoContent').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>');
+            $('#sentimentContent').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 正在分析...</div>');
+            $('#riskContent').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 正在计算...</div>');
+            $('#stockInfoContent').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>');
+            $('#stockInfoContent').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 加载中...</div>');
+            $('#maChart').html('<div class="loading-state">准备运行回测</div>');
+            $('#maMetrics').empty();
+            $('#macdChart').html('<div class="loading-state">准备运行回测</div>');
+            $('#macdMetrics').empty();
+            $('#rsiChart').html('<div class="loading-state">准备运行回测</div>');
+            $('#rsiMetrics').empty();
+            $('#optPie').empty();
+            $('#optMetrics').empty();
+            $('#volChart').html('<div class="loading-state">准备运行回测</div>');
+        }
+
+        function loadAllData(code) {
+            loadKlinePrediction(code); loadTechnicalIndicators(code);
+            loadSentiment(code); loadRisk(code); loadPredictionTable(code);
+            loadStockInfo(code); loadModelMetrics(code); loadModelInfo(code);
+            loadModelEvaluation(code);
+        }
+
+        async function loadKlinePrediction(code) {
+            const area = document.getElementById('kLineChartArea');
+            area.innerHTML = '<div class="loading-state"><i class="fas fa-spinner"></i> Loading K-line data...</div>';
+            try {
+                const [kr, pr, fr] = await Promise.all([
+                    fetch(`/api/stock/${code}`), fetch(`/api/prediction/${code}`), fetch(`/api/future/${code}?days=7&ci=0.95`)
+                ]);
+                if (!kr.ok) throw new Error('K-Line API Error');
+                const kd = await kr.json(), pd = pr.ok ? await pr.json() : [], fd = fr.ok ? await fr.json() : {};
+                if (!kd.success || !kd.kline || !kd.kline.length) throw new Error('No K-line data');
+                const data = kd.kline;
+                const dates = data.map(i => i.time), vols = data.map(i => parseFloat(i.volume));
+                const candles = data.map(i => [parseFloat(i.open), parseFloat(i.close), parseFloat(i.low), parseFloat(i.high)]);
+                const ma5 = data.map(i => i.ma5), ma10 = data.map(i => i.ma10), ma20 = data.map(i => i.ma20);
+                const ens = data.map(i => i.predicted?.ensemble), lstm = data.map(i => i.predicted?.attention_lstm);
+                const gru = data.map(i => i.predicted?.gru), trans = data.map(i => i.predicted?.transformer);
+                let aD = dates, aV = vols, aC = candles, aM5 = ma5, aM10 = ma10, aM20 = ma20, aE = ens;
+                let aLo = new Array(dates.length).fill(null), aUp = new Array(dates.length).fill(null);
+                let aL = lstm, aG = gru, aT = trans;
+                if (fd && fd.success && fd.dates && fd.dates.length > 0) {
+                    const n = fd.dates.length; aD = dates.concat(fd.dates);
+                    aV = vols.concat(Array(n).fill(null)); aC = candles.concat(Array(n).fill([null, null, null, null]));
+                    aM5 = ma5.concat(Array(n).fill(null)); aM10 = ma10.concat(Array(n).fill(null)); aM20 = ma20.concat(Array(n).fill(null));
+                    aE = ens.concat(fd.ensemble || Array(n).fill(null));
+                    aLo = aLo.concat(fd.lower || Array(n).fill(null)); aUp = aUp.concat(fd.upper || Array(n).fill(null));
+                    aL = lstm.concat(fd.models?.attention_lstm || Array(n).fill(null));
+                    aG = gru.concat(fd.models?.gru || Array(n).fill(null));
+                    aT = trans.concat(fd.models?.transformer || Array(n).fill(null));
+                }
+                area.innerHTML = '<div id="kLineChart" style="width:100%;height:100%;"></div>';
+                charts.kline = echarts.init(document.getElementById('kLineChart'));
+                charts.kline.setOption({
+                    animation: false, backgroundColor: 'transparent',
+                    tooltip: {
+                        trigger: 'axis', axisPointer: { type: 'cross' }, backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'var(--border)', textStyle: { color: '#e2e8f0' },
+                        formatter: function (p) { let r = p[0].axisValue + '<br/>'; p.forEach(x => { if (x.seriesName === 'K-Line') { const d = x.data; r += `开盘: ${d[0]?.toFixed(2)}<br/>收盘: ${d[1]?.toFixed(2)}<br/>最低: ${d[2]?.toFixed(2)}<br/>最高: ${d[3]?.toFixed(2)}<br/>`; } else if (x.seriesName === 'Volume') r += `成交量: ${x.data?.toLocaleString()}<br/>`; else if (x.data !== null) r += `<span style="color:${x.color}">●</span> ${x.seriesName}: ${x.data?.toFixed(2)}<br/>`; }); return r; }
+                    },
+                    legend: { data: ['K-Line', 'MA5', 'MA10', 'MA20', 'Ensemble', 'LSTM', 'GRU', 'Transformer', 'Volume'], top: '2%', textStyle: { color: '#94a3b8', fontSize: 11 } },
+                    grid: [{ left: '8%', right: '6%', top: '8%', height: '58%' }, { left: '8%', right: '6%', top: '73%', height: '16%' }],
+                    xAxis: [{ type: 'category', data: aD, scale: true, boundaryGap: false, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, splitLine: { show: false }, axisLabel: { color: '#64748b' }, axisPointer: { z: 100 } },
+                    { type: 'category', gridIndex: 1, data: aD, scale: true, boundaryGap: false, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false } }],
+                    yAxis: [{ scale: true, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, splitLine: { lineStyle: { color: 'rgba(99,102,241,0.06)', type: 'dashed' } }, axisLabel: { color: '#64748b' } },
+                    { scale: true, gridIndex: 1, splitNumber: 2, axisLabel: { show: false }, axisLine: { show: false }, axisTick: { show: false }, splitLine: { show: false } }],
+                    dataZoom: [{ type: 'inside', xAxisIndex: [0, 1], start: 60, end: 100 }, { show: true, xAxisIndex: [0, 1], type: 'slider', bottom: '0%', start: 60, end: 100, borderColor: 'rgba(99,102,241,0.15)', fillerColor: 'rgba(99,102,241,0.08)', handleStyle: { color: '#6366f1' }, textStyle: { color: '#94a3b8' } }],
+                    series: [
+                        { name: 'K-Line', type: 'candlestick', data: aC, itemStyle: { color: '#ef4444', color0: '#22c55e', borderColor: '#ef4444', borderColor0: '#22c55e' } },
+                        { name: 'MA5', type: 'line', data: aM5, smooth: true, symbol: 'none', lineStyle: { color: '#f59e0b', width: 1, opacity: 0.7 } },
+                        { name: 'MA10', type: 'line', data: aM10, smooth: true, symbol: 'none', lineStyle: { color: '#3b82f6', width: 1, opacity: 0.7 } },
+                        { name: 'MA20', type: 'line', data: aM20, smooth: true, symbol: 'none', lineStyle: { color: '#a855f7', width: 1, opacity: 0.7 } },
+                        { name: 'Ensemble', type: 'line', data: aE, smooth: true, symbol: 'none', lineStyle: { color: '#06b6d4', width: 2.5 }, itemStyle: { color: '#06b6d4' } },
+                        { name: 'CI Upper', type: 'line', data: aUp, smooth: true, lineStyle: { opacity: 0 }, symbol: 'none', stack: 'ci' },
+                        { name: 'CI Lower', type: 'line', data: aLo, smooth: true, lineStyle: { opacity: 0 }, symbol: 'none', stack: 'ci', areaStyle: { color: 'rgba(6,182,212,0.1)' } },
+                        { name: 'LSTM', type: 'line', data: aL, smooth: true, symbol: 'none', lineStyle: { color: '#f472b6', width: 1, type: 'dashed', opacity: 0.7 } },
+                        { name: 'GRU', type: 'line', data: aG, smooth: true, symbol: 'none', lineStyle: { color: '#34d399', width: 1, type: 'dashed', opacity: 0.7 } },
+                        { name: 'Transformer', type: 'line', data: aT, smooth: true, symbol: 'none', lineStyle: { color: '#fbbf24', width: 1, type: 'dashed', opacity: 0.7 } },
+                        { name: 'Volume', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: aV, itemStyle: { color: p => { const i = p.dataIndex; if (!data[i]) return '#334155'; return data[i].close > data[i].open ? 'rgba(239,68,68,0.5)' : 'rgba(34,197,94,0.5)'; } } }
+                    ]
+                });
+            } catch (e) { area.innerHTML = `<div class="loading-state">Failed: ${e.message}</div>`; }
+        }
+
+        async function loadTechnicalIndicators(code) {
+            try {
+                const r = await fetch(`/api/technical_indicators/${code}`); if (!r.ok) throw new Error('API Error');
+                const d = await r.json(); if (d.error) throw new Error(d.error);
+                const dates = d.dates, opts = { bg: 'transparent', tc: '#94a3b8', sl: 'rgba(99,102,241,0.06)', al: 'rgba(99,102,241,0.15)' };
+                function mkOpt(title, legend, series) { return { title: { text: title, left: 'center', textStyle: { fontSize: 13, color: '#e2e8f0' } }, tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'rgba(99,102,241,0.15)', textStyle: { color: '#e2e8f0' } }, legend: legend ? { data: legend, top: 28, textStyle: { color: '#94a3b8', fontSize: 10 } } : undefined, grid: { left: '10%', right: '5%', top: legend ? '25%' : '18%', bottom: '15%' }, xAxis: { type: 'category', data: dates.slice(-30), axisLabel: { rotate: 30, color: '#64748b', fontSize: 10 }, axisLine: { lineStyle: { color: opts.al } } }, yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: opts.sl, type: 'dashed' } }, axisLabel: { color: '#64748b' }, axisLine: { lineStyle: { color: opts.al } } }, series: series }; }
+                if (charts.price) charts.price.dispose(); charts.price = echarts.init(document.getElementById('priceChart'));
+                charts.price.setOption(mkOpt('股价与均线', ['Close', 'MA5', 'MA10', 'MA20'], [
+                    { name: 'Close', type: 'line', data: d.price.close.slice(-30), symbol: 'none', lineStyle: { color: '#e2e8f0', width: 1.5 } },
+                    { name: 'MA5', type: 'line', data: d.price.ma5.slice(-30), symbol: 'none', lineStyle: { color: '#f59e0b', width: 1 } },
+                    { name: 'MA10', type: 'line', data: d.price.ma10.slice(-30), symbol: 'none', lineStyle: { color: '#3b82f6', width: 1 } },
+                    { name: 'MA20', type: 'line', data: d.price.ma20.slice(-30), symbol: 'none', lineStyle: { color: '#a855f7', width: 1 } }
+                ]));
+                if (charts.rsi) charts.rsi.dispose(); charts.rsi = echarts.init(document.getElementById('rsiChart'));
+                charts.rsi.setOption(mkOpt('RSI 指标', null, [{ name: 'RSI', type: 'line', data: d.indicators.rsi.slice(-30), symbol: 'none', lineStyle: { color: '#ef4444', width: 1.5 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(239,68,68,0.15)' }, { offset: 1, color: 'rgba(239,68,68,0)' }] } }, markLine: { silent: true, data: [{ yAxis: 70, lineStyle: { color: 'rgba(239,68,68,0.4)' }, label: { formatter: '超买', color: '#ef4444', fontSize: 10 } }, { yAxis: 30, lineStyle: { color: 'rgba(34,197,94,0.4)' }, label: { formatter: '超卖', color: '#22c55e', fontSize: 10 } }] } }]));
+                if (charts.atr) charts.atr.dispose(); charts.atr = echarts.init(document.getElementById('atrChart'));
+                charts.atr.setOption(mkOpt('ATR (波动率)', null, [{ name: 'ATR', type: 'line', data: d.indicators.atr.slice(-30), symbol: 'none', lineStyle: { color: '#3b82f6', width: 1.5 }, areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(59,130,246,0.15)' }, { offset: 1, color: 'rgba(59,130,246,0)' }] } } }]));
+                if (charts.stoch) charts.stoch.dispose(); charts.stoch = echarts.init(document.getElementById('stochChart'));
+                charts.stoch.setOption(mkOpt('随机指标 (Stochastic)', ['%K', '%D'], [
+                    { name: '%K', type: 'line', data: d.indicators.stoch.k.slice(-30), symbol: 'none', lineStyle: { color: '#f59e0b', width: 1.5 } },
+                    { name: '%D', type: 'line', data: d.indicators.stoch.d.slice(-30), symbol: 'none', lineStyle: { color: '#fb923c', width: 1.5 } }
+                ]));
+            } catch (e) { ['priceChart', 'rsiChart', 'atrChart', 'stochChart'].forEach(id => document.getElementById(id).innerHTML = `<div class="loading-state loading-sm">加载失败: ${e.message}</div>`); }
+        }
+
+        function loadPredictionTable(code) {
+            $.ajax({
+                url: `/api/future/${code}?days=7&ci=0.95`, method: 'GET',
+                success: function (d) { renderPredChart(d); renderPredTable(d); },
+                error: function () { $('#predictionChart').html('<div class="loading-state loading-sm">加载失败</div>'); $('#predictionTable').html('<div class="loading-state loading-sm">加载失败</div>'); }
+            });
+        }
+        function renderPredChart(d) {
+            if (!d || !d.success || !d.dates || !d.dates.length) { $('#predictionChart').html('<p style="text-align:center;color:var(--text-muted)">No data</p>'); return; }
+            if (charts.pred) charts.pred.dispose();
+            charts.pred = echarts.init(document.getElementById('predictionChart'));
+            charts.pred.setOption({
+                title: { text: '未来7天 AI 融合预测趋势', left: 'center', top: 5, textStyle: { fontSize: 13, color: '#e2e8f0' } },
+                tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'rgba(99,102,241,0.15)', textStyle: { color: '#e2e8f0' }, formatter: p => `${p[0].axisValue}<br/>预测值: $${p[0].data?.toFixed(2)}` },
+                grid: { left: '10%', right: '5%', top: '15%', bottom: '15%' },
+                xAxis: { type: 'category', data: d.dates, axisLabel: { rotate: 30, color: '#64748b' }, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } } },
+                yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(99,102,241,0.06)', type: 'dashed' } }, axisLabel: { color: '#64748b' }, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } } },
+                series: [
+                    { name: 'Upper', type: 'line', data: d.upper, lineStyle: { opacity: 0 }, stack: 'cb', symbol: 'none' },
+                    { name: 'Lower', type: 'line', data: d.lower, lineStyle: { opacity: 0 }, stack: 'cb', symbol: 'none', areaStyle: { color: 'rgba(6,182,212,0.12)' } },
+                    { name: 'Predicted', type: 'line', data: d.ensemble, smooth: true, showSymbol: true, symbolSize: 7, lineStyle: { width: 2.5, color: '#06b6d4' }, itemStyle: { color: '#06b6d4', borderWidth: 2, borderColor: '#0a0e1a' } }
+                ]
+            });
+        }
+        function renderPredTable(d) {
+            if (!d || !d.success || !d.dates || !d.dates.length) { $('#predictionTable').html('<p style="text-align:center;color:var(--text-muted)">暂无数据</p>'); return; }
+            let h = '<table class="pred-table"><thead><tr><th>日期</th><th>预测值</th><th>下界 (95%)</th><th>上界 (95%)</th><th>范围</th></tr></thead><tbody>';
+            d.dates.forEach((dt, i) => {
+                const p = parseFloat(d.ensemble[i]), lo = parseFloat(d.lower[i]), up = parseFloat(d.upper[i]), rng = ((up - lo) / p * 100).toFixed(1);
+                h += `<tr><td>${dt}</td><td style="color:var(--accent-light);font-weight:600;">$${p.toFixed(2)}</td><td style="color:var(--red);">$${lo.toFixed(2)}</td><td style="color:var(--green);">$${up.toFixed(2)}</td><td><span class="badge badge-neutral">±${rng}%</span></td></tr>`;
+            });
+            h += '</tbody></table>'; $('#predictionTable').html(h);
+        }
+
+        function loadSentiment(code) {
+            $.ajax({
+                url: `/api/sentiment/${code}`, method: 'GET',
+                success: function (d) {
+                    const senMap = { 'bullish': '看多', 'bearish': '看空', 'neutral': '中性' };
+                    const sen = (d.overall_sentiment || '').toLowerCase();
+                    const cls = sen === 'bullish' ? 'badge-green' : sen === 'bearish' ? 'badge-red' : 'badge-neutral';
+                    const icon = sen === 'bullish' ? 'fa-arrow-trend-up' : sen === 'bearish' ? 'fa-arrow-trend-down' : 'fa-minus';
+                    $('#sentimentContent').html(`
+                        <div style="text-align:center;margin-bottom:20px;">
+                            <span class="badge ${cls}" style="font-size:1rem;padding:12px 30px;box-shadow:0 10px 20px -5px rgba(0,0,0,0.3);"><i class="fas ${icon}"></i> ${senMap[sen] || d.overall_sentiment}</span>
+                            <div style="margin-top:10px;font-size:0.8rem;color:var(--text-muted);">基于 ${d.news_volume ? d.news_volume.reduce((a, b) => a + b, 0) : 0} 篇近期新闻分析</div>
+                        </div>
+                        <div class="stats-row">
+                            <div class="stat-box">
+                                <div class="sv" style="color:var(--accent-light)">${(d.confidence * 100).toFixed(0)}%</div>
+                                <div class="sl">模型可信度</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="sv">${d.news_volume && d.news_volume.length > 0 ? d.news_volume[d.news_volume.length - 1] : 'N/A'}</div>
+                                <div class="sl">今日热度</div>
+                            </div>
+                        </div>`);
+                },
+                error: function () { $('#sentimentContent').html('<div class="loading-state loading-sm">Failed</div>'); }
+            });
+        }
+
+        function loadOpportunities() {
+            $('#opLong').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 扫描中...</div>');
+            $('#opShort').html('<div class="loading-state loading-sm"><i class="fas fa-spinner"></i> 扫描中...</div>');
+            $('#opMeta').text('');
+            const pool = ($('#opPool').val() || '').trim();
+            const industry = ($('#opIndustry').val() || '').trim();
+            const momentumMin = $('#opMomentumMin').val();
+            const params = new URLSearchParams({ top_n: '5', bottom_n: '5' });
+            if (pool) { params.set('stocks', pool); }
+            if (industry) { params.set('industry', industry); }
+            if (momentumMin !== null && momentumMin !== undefined && momentumMin !== '') {
+                const m = parseFloat(momentumMin);
+                if (!isNaN(m)) {
+                    params.set('momentum_min', (m / 100).toString());
+                }
+            }
+            $.ajax({
+                url: `/api/opportunities?${params.toString()}`, method: 'GET',
+                success: function (d) { renderOpportunities(d); },
+                error: function () {
+                    $('#opLong').html('<div class="empty-placeholder"><p>加载失败</p></div>');
+                    $('#opShort').html('<div class="empty-placeholder"><p>加载失败</p></div>');
+                }
+            });
+        }
+
+        function renderOpportunities(d) {
+            if (!d || d.success === false) {
+                const msg = d && d.error ? d.error : '机会扫描失败';
+                $('#opLong').html(`<div class="empty-placeholder"><p>${msg}</p></div>`);
+                $('#opShort').html(`<div class="empty-placeholder"><p>${msg}</p></div>`);
+                return;
+            }
+
+            const fmtPct = (v) => (v === null || v === undefined || isNaN(v)) ? 'N/A' : (v * 100).toFixed(2) + '%';
+            const fmtPx = (v) => (v === null || v === undefined || isNaN(v)) ? 'N/A' : '$' + Number(v).toFixed(2);
+            const fmtRank = (v) => (v === null || v === undefined || isNaN(v)) ? 'N/A' : `#${v}`;
+            const fmtSeries = (arr) => {
+                if (!arr || arr.length === 0) return 'N/A';
+                const last = arr.slice(-5);
+                return last.map(v => (v * 100).toFixed(2) + '%').join(', ');
+            };
+
+            const renderList = (arr) => {
+                if (!arr || arr.length === 0) {
+                    return '<div class="empty-placeholder"><p>暂无机会</p></div>';
+                }
+                return arr.map(item => `
+                    <div class="op-item">
+                        <div>
+                            <div class="op-symbol">${item.symbol}</div>
+                            <div class="op-metrics">加权波动率 ${fmtPct(item.vol_weighted)} · 动量 ${fmtPct(item.momentum)}</div>
+                            <div class="op-metrics">1w ${fmtPct(item.vol_1w)} / 2w ${fmtPct(item.vol_2w)} / 1m ${fmtPct(item.vol_1m)} · 排名 高${fmtRank(item.rank_high)} 低${fmtRank(item.rank_low)}</div>
+                            <div class="op-metrics">日波动率序列(末5): ${fmtSeries(item.vol_series_daily || item.vol_series)}</div>
+                        </div>
+                        <div class="op-price">${fmtPx(item.last_close)}</div>
+                    </div>
+                `).join('');
+            };
+
+            $('#opLong').html(renderList(d.long));
+            $('#opShort').html(renderList(d.short));
+            if (d.meta) {
+                const parts = [];
+                parts.push(`扫描 ${d.meta.scanned}/${d.meta.universe} 个标的`);
+                if (d.meta.lookbacks && d.meta.lookbacks.length) {
+                    parts.push(`窗口 ${d.meta.lookbacks.join('/')} 日`);
+                }
+                if (d.meta.momentum_window) {
+                    parts.push(`动量 ${d.meta.momentum_window} 日`);
+                }
+                if (d.meta.momentum_min !== undefined && d.meta.momentum_min !== null && d.meta.momentum_min > 0) {
+                    parts.push(`阈值 ${(d.meta.momentum_min * 100).toFixed(2)}%`);
+                }
+                if (d.meta.vol_series_window) {
+                    parts.push(`波动率序列 ${d.meta.vol_series_window}日窗口`);
+                }
+                if (d.meta.filters) {
+                    if (d.meta.filters.pool) {
+                        const poolCount = d.meta.pool_size || d.meta.filters.pool.split(',').filter(s => s.trim()).length;
+                        parts.push(`股票池 ${poolCount}只`);
+                    }
+                    if (d.meta.filters.industry) {
+                        parts.push(`行业 ${d.meta.filters.industry}`);
+                    }
+                }
+                $('#opMeta').text(parts.join(' · '));
+            }
+        }
+
+        function loadRisk(code) {
+            $.ajax({
+                url: `/api/risk_assessment/${code}`, method: 'GET',
+                success: function (d) {
+                    const rMap = { 'high': '高', 'medium': '中', 'low': '低' };
+                    const r = (d.risk_level || '').toLowerCase();
+                    const cls = r === 'high' ? 'badge-red' : r === 'medium' ? 'badge-gold' : 'badge-green';
+                    $('#riskContent').html(`
+                        <div class="stats-row" style="margin-bottom:16px;">
+                            <div class="stat-box"><div class="sv">${d.volatility}%</div><div class="sl">波动率</div></div>
+                            <div class="stat-box"><div class="sv">${d.sharpe_ratio}</div><div class="sl">夏普比率</div></div>
+                            <div class="stat-box"><div class="sv">${d.beta}</div><div class="sl">Beta</div></div>
+                            <div class="stat-box"><div class="sv">${d.max_drawdown}%</div><div class="sl">最大回撤</div></div>
+                        </div>
+                        <div style="text-align:center;"><span class="badge ${cls}" style="font-size:0.85rem;padding:8px 20px;"><i class="fas fa-shield-halved"></i> 风险等级: ${rMap[r] || d.risk_level}</span></div>`);
+                },
+                error: function () { $('#riskContent').html('<div class="loading-state loading-sm">Failed</div>'); }
+            });
+        }
+
+        function loadMarketOverview() {
+            $.ajax({
+                url: '/api/market_overview', method: 'GET',
+                success: function (d) {
+                    if (d.error) { $('#marketOverviewSection').html(`<div class="overview-card"><div class="loading-state">错误: ${d.error}</div></div>`); return; }
+                    $('#lastUpdate').text('最近更新: ' + d.latest_date);
+                    $('#marketOverviewSection').html(`
+                        <div class="overview-card"><div class="ov-label"><i class="fas fa-crown"></i> 最高收盘价</div><div class="ov-value">$${parseFloat(d.highest_close_price).toFixed(2)}</div><div class="ov-sub">${d.highest_close_stock}</div></div>
+                        <div class="overview-card"><div class="ov-label"><i class="fas fa-chart-bar"></i> 市场均价</div><div class="ov-value">$${parseFloat(d.avg_close_price).toFixed(2)}</div><div class="ov-sub">所有股票均价</div></div>
+                        <div class="overview-card"><div class="ov-label"><i class="fas fa-bolt"></i> 涨幅冠军</div><div class="ov-value" style="color:var(--green);">${parseFloat(d.highest_pct_change).toFixed(2)}%</div><div class="ov-sub">${d.highest_pct_change_stock}</div></div>
+                        <div class="overview-card"><div class="ov-label"><i class="fas fa-calendar"></i> 交易日期</div><div class="ov-value" style="font-size:1.2rem;">${d.latest_date}</div><div class="ov-sub">最近交易日</div></div>`);
+                },
+                error: function () { $('#marketOverviewSection').html('<div class="overview-card"><div class="loading-state">Failed to load</div></div>'); }
+            });
+        }
+
+        function loadStockInfo(code) {
+            fetch(`/api/stock_info/${code}`).then(r => r.json()).then(info => {
+                if (info.error) { $('#stockInfoContent').html(`<div class="loading-state loading-sm">${info.error}</div>`); return; }
+                $('#stockInfoContent').html(`<div class="info-grid">
+                    <div class="info-item"><div class="il">公司名称</div><div class="iv">${info.name || 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">所属行业</div><div class="iv">${info.industry || 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">总市值</div><div class="iv">${info.market_cap || 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">市盈率</div><div class="iv">${info.pe_ratio || 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">股息率</div><div class="iv">${info.dividend_yield || 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">每股收益</div><div class="iv">${info.eps || 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">营收</div><div class="iv">${info.revenue || 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">员工数</div><div class="iv">${info.employees || 'N/A'}</div></div>
+                    <div class="info-item info-span2"><div class="il">描述</div><div class="iv" style="font-weight:400;font-size:0.82rem;line-height:1.5;color:var(--text-secondary);">${info.description || 'N/A'}</div></div>
+                </div>`);
+            }).catch(e => $('#stockInfoContent').html('<div class="loading-state loading-sm">Failed</div>'));
+        }
+
+        function loadModelMetrics(code) {
+            fetch(`/api/metrics/${code}`).then(r => r.json()).then(d => {
+                if (!d.success) { $('#modelMetricsContent').html(`<div class="loading-state loading-sm">Error</div>`); return; }
+                const m = d.metrics || {};
+                $('#modelMetricsContent').html(`<div class="stats-row">
+                    <div class="stat-box"><div class="sv">${(m.price_rmse_simple ?? 0).toFixed(4)}</div><div class="sl">RMSE (简单)</div></div>
+                    <div class="stat-box"><div class="sv">${(m.price_rmse_weighted ?? 0).toFixed(4)}</div><div class="sl">RMSE (加权)</div></div>
+                    <div class="stat-box"><div class="sv">${(m.price_mae_simple ?? 0).toFixed(4)}</div><div class="sl">MAE (简单)</div></div>
+                    <div class="stat-box"><div class="sv">${(m.price_mae_weighted ?? 0).toFixed(4)}</div><div class="sl">MAE (加权)</div></div>
+                </div>`);
+            }).catch(e => $('#modelMetricsContent').html('<div class="loading-state loading-sm">Failed</div>'));
+        }
+
+        function loadModelInfo(code) {
+            fetch(`/api/model_info/${code}`).then(r => r.json()).then(d => {
+                if (!d.success) { $('#modelInfoContent').html('<div class="loading-state loading-sm">Error</div>'); return; }
+                const info = d.info || {}, models = info.models || {};
+                const ml = Object.keys(models).map(k => `<div class="info-item"><div class="il">${k}</div><div class="iv">${models[k]}</div></div>`).join('');
+                $('#modelInfoContent').html(`<div class="info-grid">
+                    <div class="info-item"><div class="il">序列长度</div><div class="iv">${info.sequence_length ?? 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">特征数</div><div class="iv">${info.feature_count ?? 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">目标列</div><div class="iv">${info.target_col ?? 'N/A'}</div></div>
+                    <div class="info-item"><div class="il">代码</div><div class="iv">${info.symbol ?? 'N/A'}</div></div>
+                    ${ml}</div>`);
+            }).catch(e => $('#modelInfoContent').html('<div class="loading-state loading-sm">Failed</div>'));
+        }
+
+        async function loadModelEvaluation(code) {
+            try {
+                const r = await fetch(`/api/model_evaluation/${code}`); if (!r.ok) return;
+                const d = await r.json();
+            } catch (e) { }
+        }
+
+        // Quant Functions
+        function switchQuantTab(tab, btn) {
+            document.querySelectorAll('.quant-tab').forEach(t => t.style.display = 'none');
+            document.getElementById('quant-' + tab).style.display = 'block';
+            document.querySelectorAll('#quant .tab-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        }
+
+        function runMABacktest() {
+            if (!currentStock) return alert('请先选择股票');
+            const s = $('#maShort').val(), l = $('#maLong').val();
+            $('#maChart').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在运行回测...</div>');
+            $.ajax({
+                url: '/api/strategy/ma_backtest', method: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ stock: currentStock, short_window: s, long_window: l }),
+                success: function (d) {
+                    if (!d.success) { $('#maChart').html(`<div class="loading-state">错误: ${d.error}</div>`); return; }
+                    const chart = echarts.init(document.getElementById('maChart'));
+                    const m = d.metrics;
+                    $('#maMetrics').html(`
+                        <div class="stat-box"><div class="sv" style="color:${parseFloat(m['Total Return']) > 0 ? 'var(--green)' : 'var(--red)'}">${m['Total Return']}</div><div class="sl">总收益率</div></div>
+                        <div class="stat-box"><div class="sv">${m['Sharpe Ratio']}</div><div class="sl">夏普比率</div></div>
+                        <div class="stat-box"><div class="sv">${m['Max Drawdown']}</div><div class="sl">最大回撤</div></div>
+                    `);
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'var(--border)', textStyle: { color: '#e2e8f0' } },
+                        legend: { top: 0, textStyle: { color: '#94a3b8' } },
+                        grid: { left: '5%', right: '2%', bottom: '10%', top: '10%' },
+                        xAxis: { type: 'category', data: d.dates, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, axisLabel: { color: '#64748b' } },
+                        yAxis: [{ type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(99,102,241,0.06)' } } }, { type: 'value', scale: true, splitLine: { show: false } }],
+                        series: [
+                            { name: '价格', type: 'line', data: d.price, smooth: true, lineStyle: { width: 1, color: '#94a3b8' } },
+                            { name: '短期均线', type: 'line', data: d.short_ma, smooth: true, lineStyle: { width: 1, color: '#f59e0b' } },
+                            { name: '长期均线', type: 'line', data: d.long_ma, smooth: true, lineStyle: { width: 1, color: '#22c55e' } },
+                            { name: '累计收益', type: 'line', yAxisIndex: 1, data: d.cumulative_returns, smooth: true, lineStyle: { width: 2, color: '#6366f1' }, areaStyle: { color: 'rgba(99,102,241,0.1)' } }
+                        ]
+                    });
+                    charts.ma = chart;
+                    renderTrades(d.trades, 'maTrades');
+                },
+                error: function (xhr, status, error) {
+                    $('#maChart').html(`<div class="loading-state">Network Error: ${error}</div>`);
+                }
+            });
+        }
+
+
+        function runOptimization() {
+            const stocks = $('#optStocks').val().split(',').map(s => s.trim()).filter(s => s);
+            $('#optPie').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在优化...</div>');
+            $.ajax({
+                url: '/api/portfolio/optimize', method: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ stocks: stocks }),
+                success: function (d) {
+                    if (!d.success) { $('#optPie').html(`<div class="loading-state">错误: ${d.error}</div>`); return; }
+                    const r = d.result;
+                    const chart = echarts.init(document.getElementById('optPie'));
+                    const data = Object.keys(r.weights).map(k => ({ name: k, value: r.weights[k] })).filter(i => i.value > 0.01);
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        title: { text: '最优资产配置', left: 'center', textStyle: { color: '#e2e8f0' } },
+                        tooltip: { trigger: 'item' },
+                        series: [{ type: 'pie', radius: ['40%', '70%'], itemStyle: { borderRadius: 10, borderColor: '#0a0e1a', borderWidth: 2 }, label: { color: '#e2e8f0' }, data: data }]
+                    });
+                    $('#optMetrics').html(`
+                        <div class="info-item"><div class="il">预期收益率</div><div class="iv" style="color:var(--green)">${(r.return * 100).toFixed(2)}%</div></div>
+                        <div class="info-item" style="margin-top:10px;"><div class="il">波动率 (风险)</div><div class="iv">${(r.volatility * 100).toFixed(2)}%</div></div>
+                        <div class="info-item" style="margin-top:10px;"><div class="il">夏普比率</div><div class="iv" style="color:var(--accent-light)">${r.sharpe.toFixed(2)}</div></div>
+                    `);
+                    charts.opt = chart;
+                }
+            });
+        }
+
+        function runVolTarget() {
+            if (!currentStock) return alert('请先选择股票');
+            const t = $('#volTarget').val();
+            $('#volChart').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在运行回测...</div>');
+            $.ajax({
+                url: `/api/volatility/target/${currentStock}?target=${t}`, method: 'GET',
+                success: function (d) {
+                    if (!d.success) { $('#volChart').html(`<div class="loading-state">错误: ${d.error}</div>`); return; }
+                    const chart = echarts.init(document.getElementById('volChart'));
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis', backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'var(--border)', textStyle: { color: '#e2e8f0' } },
+                        legend: { top: 0, textStyle: { color: '#94a3b8' } },
+                        grid: { left: '5%', right: '2%', bottom: '10%', top: '10%' },
+                        xAxis: { type: 'category', data: d.dates, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, axisLabel: { color: '#64748b' } },
+                        yAxis: [{ type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(99,102,241,0.06)' } } }, { type: 'value', scale: true, name: '杠杆率', splitLine: { show: false } }],
+                        series: [
+                            { name: '累计收益', type: 'line', data: d.cumulative_returns, smooth: true, lineStyle: { width: 2, color: '#22c55e' }, areaStyle: { color: 'rgba(34,197,94,0.1)' } },
+                            { name: '杠杆率', type: 'line', yAxisIndex: 1, data: d.leverage, smooth: true, lineStyle: { width: 1, color: '#f59e0b', type: 'dashed' } }
+                        ]
+                    });
+                    charts.vol = chart;
+                }
+            });
+        }
+
+        function runMACDBacktest() {
+            if (!currentStock) return alert('请先选择股票');
+            const f = $('#macdFast').val(), s = $('#macdSlow').val(), sig = $('#macdSig').val();
+            $('#macdChart').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在运行回测...</div>');
+            $.ajax({
+                url: '/api/strategy/macd_backtest', method: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ stock: currentStock, fast: f, slow: s, signal: sig }),
+                success: function (d) {
+                    if (!d.success) { $('#macdChart').html(`<div class="loading-state">错误: ${d.error}</div>`); return; }
+                    const chart = echarts.init(document.getElementById('macdChart'));
+                    const m = d.metrics;
+                    $('#macdMetrics').html(`
+                        <div class="stat-box"><div class="sv" style="color:${parseFloat(m['Total Return']) > 0 ? 'var(--green)' : 'var(--red)'}">${m['Total Return']}</div><div class="sl">总收益率</div></div>
+                        <div class="stat-box"><div class="sv">${m['Sharpe Ratio']}</div><div class="sl">夏普比率</div></div>
+                        <div class="stat-box"><div class="sv">${m['Max Drawdown']}</div><div class="sl">最大回撤</div></div>
+                        <div class="stat-box"><div class="sv">${m['Trades']}</div><div class="sl">交易次数</div></div>
+                    `);
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'var(--border)', textStyle: { color: '#e2e8f0' } },
+                        legend: { top: 0, textStyle: { color: '#94a3b8' } },
+                        grid: [{ left: '5%', right: '2%', height: '55%', top: '10%' }, { left: '5%', right: '2%', top: '70%', height: '20%' }],
+                        xAxis: [{ type: 'category', data: d.dates, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, axisLabel: { show: false } },
+                        { type: 'category', gridIndex: 1, data: d.dates, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, axisLabel: { color: '#64748b' } }],
+                        yAxis: [{ type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(99,102,241,0.06)' } } },
+                        { type: 'value', gridIndex: 1, scale: true, splitLine: { show: false } }],
+                        dataZoom: [{ type: 'inside', xAxisIndex: [0, 1] }, { show: true, type: 'slider', xAxisIndex: [0, 1], bottom: 0 }],
+                        series: [
+                            { name: '价格', type: 'line', data: d.price, smooth: true, lineStyle: { width: 1, color: '#94a3b8' } },
+                            { name: '累计收益', type: 'line', data: d.cumulative_returns, smooth: true, lineStyle: { width: 2, color: '#6366f1' }, areaStyle: { color: 'rgba(99,102,241,0.1)' } },
+                            { name: 'MACD', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: d.indicator_1, lineStyle: { width: 1, color: '#f59e0b' } },
+                            { name: 'Signal', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: d.indicator_2, lineStyle: { width: 1, color: '#3b82f6' } },
+                            { name: 'Hist', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: d.indicator_3, itemStyle: { color: p => p.data > 0 ? '#ef4444' : '#22c55e' } }
+                        ]
+                    });
+                    charts.macd = chart;
+                    renderTrades(d.trades, 'macdTrades');
+                },
+                error: function (xhr, status, error) { $('#macdChart').html(`<div class="loading-state">Error: ${error}</div>`); }
+            });
+        }
+
+        function runRSIBacktest() {
+            if (!currentStock) return alert('请先选择股票');
+            const w = $('#rsiWin').val(), ob = $('#rsiOverbought').val(), os = $('#rsiOversold').val();
+            $('#rsiChart').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在运行回测...</div>');
+            $.ajax({
+                url: '/api/strategy/rsi_backtest', method: 'POST', contentType: 'application/json',
+                data: JSON.stringify({ stock: currentStock, window: w, overbought: ob, oversold: os }),
+                success: function (d) {
+                    if (!d.success) { $('#rsiChart').html(`<div class="loading-state">错误: ${d.error}</div>`); return; }
+                    const chart = echarts.init(document.getElementById('rsiChart'));
+                    const m = d.metrics;
+                    $('#rsiMetrics').html(`
+                        <div class="stat-box"><div class="sv" style="color:${parseFloat(m['Total Return']) > 0 ? 'var(--green)' : 'var(--red)'}">${m['Total Return']}</div><div class="sl">总收益率</div></div>
+                        <div class="stat-box"><div class="sv">${m['Sharpe Ratio']}</div><div class="sl">夏普比率</div></div>
+                        <div class="stat-box"><div class="sv">${m['Max Drawdown']}</div><div class="sl">最大回撤</div></div>
+                        <div class="stat-box"><div class="sv">${m['Trades']}</div><div class="sl">交易次数</div></div>
+                    `);
+                    chart.setOption({
+                        backgroundColor: 'transparent',
+                        tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'var(--border)', textStyle: { color: '#e2e8f0' } },
+                        legend: { top: 0, textStyle: { color: '#94a3b8' } },
+                        grid: [{ left: '5%', right: '2%', height: '55%', top: '10%' }, { left: '5%', right: '2%', top: '70%', height: '20%' }],
+                        xAxis: [{ type: 'category', data: d.dates, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, axisLabel: { show: false } },
+                        { type: 'category', gridIndex: 1, data: d.dates, axisLine: { lineStyle: { color: 'rgba(99,102,241,0.15)' } }, axisLabel: { color: '#64748b' } }],
+                        yAxis: [{ type: 'value', scale: true, splitLine: { lineStyle: { color: 'rgba(99,102,241,0.06)' } } },
+                        { type: 'value', gridIndex: 1, scale: true, splitLine: { show: false }, min: 0, max: 100 }],
+                        dataZoom: [{ type: 'inside', xAxisIndex: [0, 1] }, { show: true, type: 'slider', xAxisIndex: [0, 1], bottom: 0 }],
+                        series: [
+                            { name: '价格', type: 'line', data: d.price, smooth: true, lineStyle: { width: 1, color: '#94a3b8' } },
+                            { name: '累计收益', type: 'line', data: d.cumulative_returns, smooth: true, lineStyle: { width: 2, color: '#6366f1' }, areaStyle: { color: 'rgba(99,102,241,0.1)' } },
+                            { name: 'RSI', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: d.indicator_1, lineStyle: { width: 1, color: '#f59e0b' } },
+                            { name: 'Overbought', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: d.indicator_2, lineStyle: { width: 1, color: '#ef4444', type: 'dashed' }, symbol: 'none' },
+                            { name: 'Oversold', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: d.indicator_3, lineStyle: { width: 1, color: '#22c55e', type: 'dashed' }, symbol: 'none' }
+                        ]
+                    });
+                    charts.rsi = chart;
+                    renderTrades(d.trades, 'rsiTrades');
+                },
+                error: function (xhr, status, error) { $('#rsiChart').html(`<div class="loading-state">Error: ${error}</div>`); }
+            });
+        }
+
+        function renderTrades(trades, containerId) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            if (!trades || trades.length === 0) { el.innerHTML = ''; return; }
+
+            let h = '<h4 style="margin:20px 0 10px 0;font-size:0.9rem;color:var(--accent-light);">交易记录詳情</h4>';
+            h += '<div style="max-height:300px;overflow-y:auto;border:1px solid rgba(255,255,255,0.05);border-radius:8px;"><table class="trade-table"><thead><tr><th>入场日期</th><th>出场日期</th><th>入场价</th><th>出场价</th><th>收益率</th></tr></thead><tbody>';
+            trades.forEach(t => {
+                const color = t.return > 0 ? 'var(--green)' : 'var(--red)';
+                h += `<tr>
+                    <td>${t.entry_date}</td>
+                    <td>${t.exit_date}</td>
+                    <td>${t.entry_price.toFixed(2)}</td>
+                    <td>${t.exit_price.toFixed(2)}</td>
+                    <td style="color:${color}">${(t.return * 100).toFixed(2)}%</td>
+                </tr>`;
+            });
+            h += '</tbody></table></div>';
+            el.innerHTML = h;
+        }
+
+
+
+
+        // News Functions
+        function _setNewsTab(active) {
+            const buttons = document.querySelectorAll('#news .tab-btn');
+            buttons.forEach(b => b.classList.remove('active'));
+            if (buttons.length >= 2) {
+                if (active === 'market') {
+                    buttons[1].classList.add('active');
+                } else {
+                    buttons[0].classList.add('active');
+                }
+            }
+        }
+
+        function loadNews(stock) {
+            _setNewsTab('stock');
+            if (!stock) return;
+            $('#newsFeed').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在加载 ' + stock + ' 新闻...</div>');
+            $.ajax({
+                url: `/api/news/${stock}`, method: 'GET',
+                success: function (d) { renderNews(d); },
+                error: function () { $('#newsFeed').html('<div class="loading-state">加载失败</div>'); }
+            });
+        }
+
+        function loadMarketNews() {
+            _setNewsTab('market');
+            $('#newsFeed').html('<div class="loading-state"><i class="fas fa-spinner"></i> 正在加载市场新闻...</div>');
+            $.ajax({
+                url: `/api/news/market`, method: 'GET',
+                success: function (d) { renderNews(d); },
+                error: function () { $('#newsFeed').html('<div class="loading-state">Failed to load market news</div>'); }
+            });
+        }
+
+        function renderNews(d) {
+            if (!d || d.success === false) {
+                const msg = d && d.error ? d.error : '新闻服务不可用';
+                $('#newsFeed').html(`<div class="empty-placeholder"><i class="fas fa-newspaper"></i><p>${msg}</p></div>`); return;
+            }
+            if (!d.news || d.news.length === 0) {
+                $('#newsFeed').html('<div class="empty-placeholder"><i class="fas fa-newspaper"></i><p>暂无相关新闻</p></div>'); return;
+            }
+            let html = '';
+            d.news.forEach(n => {
+                const dateParts = n.datetime.split(' ');
+                html += `
+                <div class="news-item">
+                    <div class="news-header">
+                        <span class="news-source"><i class="far fa-newspaper"></i> ${n.source}</span>
+                        <span>${dateParts[0]} <span style="opacity:0.6">${dateParts[1] || ''}</span></span>
+                    </div>
+                    <a href="${n.url}" target="_blank" class="news-headline">${n.headline}</a>
+                    <div class="news-summary">${n.summary}</div>
+                    <div class="news-footer">
+                        <span class="badge" style="background:${n.sentiment_color};color:white;padding:5px 12px;font-size:0.75rem;font-weight:700;">${n.sentiment_label}</span>
+                        <a href="${n.url}" target="_blank" class="read-more">阅读全文 <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>`;
+            });
+            $('#newsFeed').html(html);
+        }
+
+        function refreshData() { if (currentStock) { loadAllData(currentStock); loadNews(currentStock); } loadMarketOverview(); loadOpportunities(); }
+
+        // Auto-init
+        $(document).ready(function () {
+            loadMarketOverview();
+            loadOpportunities();
+            // Default load AAPL
+            setTimeout(() => {
+                const def = 'AAPL';
+                currentStock = def;
+                $('#stockSelect').val(def);
+                $('#currentStockBadge').text(def).show();
+                loadAllData(def);
+                loadNews(def);
+            }, 500);
+        });
+
+        $(window).on('resize', function () { Object.values(charts).forEach(c => { if (c && typeof c.resize === 'function') try { c.resize(); } catch (e) { } }); });
+    </script>
+</body>
+
+</html>

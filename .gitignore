@@ -1,0 +1,28 @@
+﻿__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.env
+.env.*
+.auth.json
+
+# Data / cache
+stock_data/
+*.db
+*.cache
+
+# Models / artifacts
+models/
+*.pth
+*.pt
+*.pkl
+*.joblib
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
