@@ -92,6 +92,12 @@ def _start_init_once():
     global _init_started
     if _init_started:
         return
+    
+    # Check if TIINGO_TOKEN is set
+    if not os.environ.get("TIINGO_TOKEN"):
+        print("WARNING: TIINGO_TOKEN not set. Skipping background data initialization to prevent crash.")
+        return
+
     _init_started = True
     t = threading.Thread(target=init_data_background, daemon=True)
     t.start()
