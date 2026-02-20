@@ -6,10 +6,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ && \
     rm -rf /var/lib/apt/lists/*
 
-# Install CPU-only PyTorch first (much smaller than default CUDA version)
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-
-# Install remaining dependencies
+# Install all Python dependencies (torch uses CPU-only via --extra-index-url in requirements.txt)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
