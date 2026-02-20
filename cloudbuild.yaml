@@ -22,3 +22,6 @@ steps:
 
 images:
   - 'gcr.io/$PROJECT_ID/quant-system:$COMMIT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
